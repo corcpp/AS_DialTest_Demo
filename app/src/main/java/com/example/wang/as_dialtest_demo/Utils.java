@@ -3,8 +3,14 @@ package com.example.wang.as_dialtest_demo;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.List;
 
 /**
@@ -13,6 +19,11 @@ import java.util.List;
 public class Utils {
 
 
+    /**
+     * 判断应用是否是在前台
+     * @param context
+     * @return
+     */
     public static boolean isBackground(Context context) {
 
         Log.d("Background.packageName", context.getPackageName());
@@ -62,5 +73,50 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    /***
+     * 存储文件到 sd卡公共目录下
+     * @param context
+     * @param fileName
+     * @param content
+     */
+    public  static void saveToFile(Context context, String fileName, String content) {
+
+        FileOutputStream outputStream = null;
+        OutputStreamWriter writer = null;
+
+        File file = new File(Environment.getExternalStorageDirectory() + File.separator + fileName);
+        Log.d("new log.txt file path", file.getPath().toString());
+        Log.d(">>>>>>>>>", "begin to save to log.txt...");
+        try {
+            outputStream = new FileOutputStream(file);
+            outputStream.write(content.getBytes());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if(outputStream != null)
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+        }
+    }
+
+    /**
+     * 删除日志文件
+     * @param context
+     * @param fileName
+     */
+    public  static void deleteFile(Context context, String fileName) {
+
+        File file = new File(Environment.getExternalStorageDirectory() + File.separator + fileName);
+        if(file.exists()) {
+            Log.d("delete log.txt path", file.getPath().toString());
+            file.delete();
+        }
     }
 }

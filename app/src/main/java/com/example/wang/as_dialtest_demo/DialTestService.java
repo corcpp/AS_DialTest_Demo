@@ -17,6 +17,7 @@ import com.cmcc.sso.sdk.util.SsoSdkConstants;
 
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 /**
@@ -35,6 +36,8 @@ public class DialTestService extends Service{
     private TokenListener listener;
     private ProgressDialog mProgressDialog = null;
 
+    private DBManager mDBManager;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -48,13 +51,15 @@ public class DialTestService extends Service{
 
         mAuthnHelper = new AuthnHelper(this);
         mAuthnHelper.setDefaultUI(false);
+        DBManager.initialize(this);
+        mDBManager = DBManager.getInstance();
 
         listener = new TokenListener() {
             @Override
             public void onGetTokenComplete(JSONObject jsonObject) {
 
                 mHandler.sendEmptyMessage(DISMISS_LOGIN_PROGRESS);
-                int resultCode = jsonObject.optInt(SsoSdkConstants.VALUES_KEY_RESULT_CODE, -1);
+                final int resultCode = jsonObject.optInt(SsoSdkConstants.VALUES_KEY_RESULT_CODE, -1);
 
                 if(resultCode == AuthnConstants.CLIENT_CODE_SUCCESS) {
                     Log.d("result code: ", resultCode + "");
@@ -66,6 +71,22 @@ public class DialTestService extends Service{
                         }
                     });
                 }
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        int result = resultCode == AuthnConstants.CLIENT_CODE_SUCCESS ? 1 : 0;
+                        long time = new Date().getTime();
+                        String network = NetworkUtils.GetNetworkType(DialTestService.this);
+                        String authn = network.equals("WIFI") ? "HS" : "WAP";
+
+                        Record newRecord = new Record(time, network, authn, result);
+
+                        mDBManager.insert(newRecord);
+                    }
+                }).start();
+
+
             }
         };
 
@@ -92,10 +113,11 @@ public class DialTestService extends Service{
 
     @Override
     public void onDestroy() {
-
+        //释放资源
         if(timer !=null) {
             timer.cancel();
         }
+
         super.onDestroy();
     }
 
