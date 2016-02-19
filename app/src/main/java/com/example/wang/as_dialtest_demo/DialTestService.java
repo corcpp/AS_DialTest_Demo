@@ -1,5 +1,7 @@
 package com.example.wang.as_dialtest_demo;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Intent;
@@ -7,6 +9,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -18,6 +21,7 @@ import com.cmcc.sso.sdk.util.SsoSdkConstants;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 /**
@@ -60,6 +64,7 @@ public class DialTestService extends Service{
 
                 mHandler.sendEmptyMessage(DISMISS_LOGIN_PROGRESS);
                 final int resultCode = jsonObject.optInt(SsoSdkConstants.VALUES_KEY_RESULT_CODE, -1);
+                final String resultString = jsonObject.optString(SsoSdkConstants.VALUES_KEY_RESULT_STRING, "success");
 
                 if(resultCode == AuthnConstants.CLIENT_CODE_SUCCESS) {
                     Log.d("result code: ", resultCode + "");
@@ -70,6 +75,8 @@ public class DialTestService extends Service{
                         public void onGetTokenComplete(JSONObject jsonObject) {
                         }
                     });
+                } else {
+                    notifyAuthnFailed(resultCode, resultString);
                 }
 
                 new Thread(new Runnable() {
@@ -119,6 +126,29 @@ public class DialTestService extends Service{
         }
 
         super.onDestroy();
+    }
+
+    private void notifyAuthnFailed(int resultCode, String resultString) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        builder.setContentTitle("协商失败")
+                .setContentText("错误码：" + resultCode + "  " + resultString)
+                .setAutoCancel(true)//貌似并没有什么用
+                //加下面这句点击取消通知
+//                .setContentIntent(PendingIntent.getActivity(this, 1, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT))
+                .setTicker("中间件通知")
+                .setWhen(System.currentTimeMillis())
+                .setPriority(Notification.PRIORITY_MAX)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setSmallIcon(R.mipmap.ic_launcher);
+
+        Notification notification = builder.build();
+        notification.flags = Notification.FLAG_AUTO_CANCEL;
+//        notification.flags = Notification.FLAG_INSISTENT;
+
+        notificationManager.notify(new Random().nextInt(1000), notification);
     }
 
     private Handler mHandler = new Handler() {
