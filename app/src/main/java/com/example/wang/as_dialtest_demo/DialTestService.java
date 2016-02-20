@@ -1,7 +1,5 @@
 package com.example.wang.as_dialtest_demo;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Intent;
@@ -9,7 +7,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -21,7 +18,6 @@ import com.cmcc.sso.sdk.util.SsoSdkConstants;
 import org.json.JSONObject;
 
 import java.util.Date;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 /**
@@ -55,6 +51,7 @@ public class DialTestService extends Service{
 
         mAuthnHelper = new AuthnHelper(this);
         mAuthnHelper.setDefaultUI(false);
+
         DBManager.initialize(this);
         mDBManager = DBManager.getInstance();
 
@@ -76,7 +73,7 @@ public class DialTestService extends Service{
                         }
                     });
                 } else {
-                    notifyAuthnFailed(resultCode, resultString);
+                   Utils.notifyAuthnFailed(DialTestService.this, resultCode, resultString);
                 }
 
                 new Thread(new Runnable() {
@@ -104,7 +101,7 @@ public class DialTestService extends Service{
             public void run() {
 
                 mHandler.sendEmptyMessage(SHOW_LOGIN_PROGRESS);
-                mAuthnHelper.getAccessToken(HostConfig.APP_ID, HostConfig.APP_KEY, null, SsoSdkConstants.LOGIN_TYPE_WAP + "," +SsoSdkConstants.LOGIN_TYPE_DATASMS, listener);
+                mAuthnHelper.getAccessToken(HostConfig.APP_ID, HostConfig.APP_KEY, null, SsoSdkConstants.LOGIN_TYPE_WAP + "," + SsoSdkConstants.LOGIN_TYPE_DATASMS, listener);
             }
         }, 0, period);
 
@@ -120,6 +117,8 @@ public class DialTestService extends Service{
 
     @Override
     public void onDestroy() {
+
+        Log.d(TAG, "onDestroy ...");
         //释放资源
         if(timer !=null) {
             timer.cancel();
@@ -128,28 +127,6 @@ public class DialTestService extends Service{
         super.onDestroy();
     }
 
-    private void notifyAuthnFailed(int resultCode, String resultString) {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-
-        builder.setContentTitle("协商失败")
-                .setContentText("错误码：" + resultCode + "  " + resultString)
-                .setAutoCancel(true)//貌似并没有什么用
-                //加下面这句点击取消通知
-//                .setContentIntent(PendingIntent.getActivity(this, 1, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT))
-                .setTicker("中间件通知")
-                .setWhen(System.currentTimeMillis())
-                .setPriority(Notification.PRIORITY_MAX)
-                .setDefaults(Notification.DEFAULT_ALL)
-                .setSmallIcon(R.mipmap.ic_launcher);
-
-        Notification notification = builder.build();
-        notification.flags = Notification.FLAG_AUTO_CANCEL;
-//        notification.flags = Notification.FLAG_INSISTENT;
-
-        notificationManager.notify(new Random().nextInt(1000), notification);
-    }
 
     private Handler mHandler = new Handler() {
         @Override

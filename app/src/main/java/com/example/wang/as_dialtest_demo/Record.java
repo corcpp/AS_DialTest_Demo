@@ -7,11 +7,11 @@ import java.util.Date;
  */
 public class Record {
 
-    public int id;
-    public long time;
-    public String network;
-    public String authn;
-    public int result;
+    private int id;
+    private long time;
+    private String network;
+    private String authn;
+    private int result;
 
     public Record() {
     }
@@ -78,7 +78,7 @@ public class Record {
     @Override
     public String toString() {
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
         return "{" +
                 "id=" + id +
@@ -86,7 +86,7 @@ public class Record {
                 ", network='" + network + '\'' +
                 ", authn='" + authn + '\'' +
                 ", result=" + result +
-                '}';
+                '}' + "\n";
 
 
 

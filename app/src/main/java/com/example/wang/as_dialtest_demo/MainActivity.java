@@ -6,10 +6,13 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -25,38 +28,60 @@ public class MainActivity extends AppCompatActivity {
 
     private final String  email_2 = "wangjiefenghy@chinamobile.com";
 
+    private boolean sendFlag = false;
+
+    private long clickTime = 0;
 
     private DBManager mDBManager;
 
-    @Bind(R.id.start_btn)
-    Button startBtn;
+    @Bind(R.id.start_dial_btn)
+    Button startDialBtn;
 
-    @Bind(R.id.end_btn)
-    Button endBtn;
-
-    @Bind(R.id.delete_log_btn)
+    @Bind(R.id.analysis_log_btn)
     Button checkLogBtn;
 
     @Bind(R.id.send_log_btn)
     Button sendLogBtn;
 
-    @OnClick(R.id.start_btn)
+    @Bind(R.id.analysis_result_tv)
+    TextView anysisResultTv;
+
+    @OnClick(R.id.start_dial_btn)
     void startLogin() {
-        Intent sIntent = new Intent(this, DialTestService.class);
-        startService(sIntent);
-        Toast.makeText(this, "开始发送请求", Toast.LENGTH_SHORT).show();
+
+        if( !sendFlag ) {
+            sendFlag = true;
+            startDialBtn.setText("停止拨测");
+            Toast.makeText(this, "开始发送请求", Toast.LENGTH_SHORT).show();
+            Intent sIntent = new Intent(this, DialTestService.class);
+            startService(sIntent);
+        } else {
+            sendFlag = false;
+            startDialBtn.setText("开始拨测");
+            Toast.makeText(this, "停止发送请求", Toast.LENGTH_SHORT).show();
+            Intent sIntent = new Intent(this, DialTestService.class);
+            stopService(sIntent);
+        }
     }
 
-    @OnClick(R.id.end_btn)
-    void stopLogin() {
-        Intent sIntent = new Intent(this, DialTestService.class);
-        stopService(sIntent);
-        Toast.makeText(this, "停止发送请求", Toast.LENGTH_SHORT).show();
-    }
 
-    @OnClick(R.id.delete_log_btn)
-    void deleteLogFile() {
-        Utils.deleteFile(this, logFileName);
+    @OnClick(R.id.analysis_log_btn)
+    void analysisLog() {
+//        Utils.deleteFile(this, logFileName);
+        int sum = 0, failCount = 0;
+        List<Record> records =  DBManager.getInstance().query();
+        for(Record record : records) {
+            ++sum;
+            if(record.getResult() == 0) {
+                ++failCount;
+            }
+        }
+
+        double percent = (sum - failCount + 0.0) / sum * 100;
+        anysisResultTv.setText("总计: " + sum + "  成功: " + (sum - failCount)
+                + "  失败: " + failCount + "  百分比: " + percent + "%");
+
+
     }
 
     @OnClick(R.id.send_log_btn)
@@ -81,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
                 String[] emailReciver = new String[]{ email_2};
 
                 String  emailTitle = "拨测客户端日志";
-                String emailContent = "附件呢？";
+                String emailContent = "拨测结果仅供参考哦 O(∩_∩)O~~ ";
                 //设置邮件地址
                 email.putExtra(android.content.Intent.EXTRA_EMAIL, emailReciver);
                 //设置邮件标题
@@ -102,16 +127,44 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        //初始化数据库
         DBManager.initialize(this);
         mDBManager = DBManager.getInstance();
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode == KeyEvent.KEYCODE_BACK) {
+            exit();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private void exit() {
+        if( System.currentTimeMillis() - clickTime > 2000) {
+            Toast.makeText(getApplicationContext(), "再按一次后退键退出程序", Toast.LENGTH_SHORT).show();
+            clickTime = System.currentTimeMillis();
+        } else {
+            Log.d(TAG, "Exit Applicetion");
+            finish();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
-        Toast.makeText(this, "停止发送", Toast.LENGTH_SHORT).show();
+        Log.e(TAG, "退出程序，停止服务-->清除DB");
+
+        //停止service
         Intent sIntent = new Intent(this, DialTestService.class);
         stopService(sIntent);
 
+        //删除数据库，注意删除后下次重新启动必须正确初始化，DBManager和MyDataBaseHelper，所以要退出进程才行
+        this.deleteDatabase(MyDataBaseHelper.DATABASE_NAME);
         super.onDestroy();
+        //退出进程
+        System.exit(0);
+
     }
 }

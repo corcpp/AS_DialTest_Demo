@@ -16,20 +16,15 @@
         android:layout_height="wrap_content">
 
         <Button
-            android:id="@+id/start_btn"
-            android:layout_width="0dp"
+            android:id="@+id/start_dial_btn"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="开发发送"
+            android:text="开始拨测"
+            android:textSize="17sp"
+            android:textColor="@android:color/holo_red_light"
             />
 
-        <Button
-            android:id="@+id/end_btn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="停止"
-            />
     </LinearLayout>
 
     <LinearLayout
@@ -46,12 +41,19 @@
             />
 
         <Button
-            android:id="@+id/delete_log_btn"
+            android:id="@+id/analysis_log_btn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="删除日志"
+            android:text="分析日志"
             />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/analysis_result_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="分析结果 ： "/>
+
 
 </LinearLayout>

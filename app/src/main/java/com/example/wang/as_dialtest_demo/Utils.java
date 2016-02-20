@@ -1,9 +1,12 @@
 package com.example.wang.as_dialtest_demo;
 
 import android.app.ActivityManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.os.Environment;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.File;
@@ -12,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by wang on 2016/2/4.
@@ -119,4 +123,28 @@ public class Utils {
             file.delete();
         }
     }
+
+    public static void notifyAuthnFailed(Context context, int resultCode, String resultString) {
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+
+        builder.setContentTitle("协商失败")
+                .setContentText("错误码：" + resultCode + "  " + resultString)
+                .setAutoCancel(true)//貌似并没有什么用
+                        //加下面这句点击取消通知
+//                .setContentIntent(PendingIntent.getActivity(this, 1, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT))
+                .setTicker("中间件通知")
+                .setWhen(System.currentTimeMillis())
+                .setPriority(Notification.PRIORITY_MAX)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setSmallIcon(R.mipmap.ic_launcher);
+
+        Notification notification = builder.build();
+        notification.flags = Notification.FLAG_AUTO_CANCEL;
+//        notification.flags = Notification.FLAG_INSISTENT;
+
+        notificationManager.notify(new Random().nextInt(1000), notification);
+    }
+
 }

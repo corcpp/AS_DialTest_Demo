@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -70,8 +71,13 @@ public class DBManager {
      * @param record
      */
     public void insert(Record record) {
+
+        if(instance == null) {
+            return;
+        }
+
         ContentValues values = new ContentValues();
-        values.put(MyDataBaseHelper.CONTACTS_COLUMN_TIME, new Date().getTime());
+        values.put(MyDataBaseHelper.CONTACTS_COLUMN_TIME, record.getTime());
         values.put(MyDataBaseHelper.CONTACTS_COLUMN_NETWORK, record.getNetwork());
         values.put(MyDataBaseHelper.CONTACTS_COLUMN_AUTHN, record.getAuthn());
         values.put(MyDataBaseHelper.CONTACTS_COLUMN_RESULT, record.getResult());
@@ -106,19 +112,23 @@ public class DBManager {
      */
     public List<Record> query() {
 
+        if(instance == null || mDb == null) {
+            return new ArrayList<Record>();
+        }
+
         List<Record> records = new ArrayList<>();
         Cursor cursor = mDb.query(MyDataBaseHelper.CONTACTS_TABLE_NAME, null, null, null, null, null,null);
         if(cursor.moveToFirst()) {
             do {
 
                 int id = cursor.getInt(cursor.getColumnIndex(MyDataBaseHelper.CONTACTS_COLUMN_ID));
-                long time = (long) cursor.getInt(cursor.getColumnIndex(MyDataBaseHelper.CONTACTS_COLUMN_TIME));
+                long time = cursor.getLong(cursor.getColumnIndex(MyDataBaseHelper.CONTACTS_COLUMN_TIME));
+                Log.w("time", time + ")");
                 String network = cursor.getString(cursor.getColumnIndex(MyDataBaseHelper.CONTACTS_COLUMN_NETWORK));
                 String authn = cursor.getString(cursor.getColumnIndex(MyDataBaseHelper.CONTACTS_COLUMN_AUTHN));
                 int result = cursor.getInt(cursor.getColumnIndex(MyDataBaseHelper.CONTACTS_COLUMN_RESULT));
 
                 Record record = new Record(id, time, network, authn, result);
-
                 records.add(record);
 
             } while(cursor.moveToNext());
