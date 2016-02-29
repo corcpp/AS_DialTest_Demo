@@ -1,5 +1,7 @@
 package com.example.wang.as_dialtest_demo;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,8 +10,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.cmcc.sso.sdk.util.LogUtil;
 
 import java.io.File;
 import java.util.List;
@@ -29,6 +34,10 @@ public class MainActivity extends AppCompatActivity {
     private final String  email_2 = "wangjiefenghy@chinamobile.com";
 
     private boolean sendFlag = false;
+
+    private AlertDialog dialog;
+
+    EditText mTimesEt;
 
     private long clickTime = 0;
 
@@ -131,7 +140,55 @@ public class MainActivity extends AppCompatActivity {
         //初始化数据库
         DBManager.initialize(this);
         mDBManager = DBManager.getInstance();
+
+        mTimesEt = new EditText(this);
+//        mTimesEt.setHint("请输入拨测频率（大于30的整数，n秒/次)");
+        mTimesEt.setTextSize(15f);
+        mTimesEt.setText("30");
+
+        new AlertDialog.Builder(this)
+                .setTitle("输入拨测频率（秒）：")
+                .setCancelable(false)
+                .setView(mTimesEt)
+                .setPositiveButton("确定", mTimeCommitListener)
+                .setNegativeButton("取消", mTimeCommitListener).show();
+
     }
+
+    private DialogInterface.OnClickListener mTimeCommitListener = new DialogInterface.OnClickListener() {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+
+                    int period = 30;
+                    try {
+                        period  =  Integer.parseInt(mTimesEt.getText().toString().trim());
+                    } catch (NumberFormatException ex) {
+                        ex.printStackTrace();
+                    }
+                    LogUtil.debug(TAG, "拨测周期：" + period + "");
+
+                    if(period < 30) {
+                        dialog.dismiss();
+                        Toast.makeText(MainActivity.this, "频率 30 秒", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    Toast.makeText(MainActivity.this, "频率" + period + "秒", Toast.LENGTH_SHORT).show();
+                    DialTestService.period = period * 1000;
+                    dialog.dismiss();
+                    break;
+
+                case DialogInterface.BUTTON_NEGATIVE:
+                    Toast.makeText(MainActivity.this, "频率 30 秒", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    break;
+            }
+
+        }
+    };
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {

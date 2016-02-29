@@ -30,7 +30,7 @@ public class DialTestService extends Service{
     private static final int DISMISS_LOGIN_PROGRESS = 0x12;
 
 
-    private static final int period = 30 * 1000;
+    public static  int period = 30 * 1000;
     private Timer timer;
     private AuthnHelper mAuthnHelper;
     private TokenListener listener;
