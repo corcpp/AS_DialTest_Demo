@@ -2,10 +2,12 @@ package com.example.wang.as_dialtest_demo;
 
 import android.app.ProgressDialog;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.WindowManager;
@@ -37,6 +39,9 @@ public class DialTestService extends Service{
     private ProgressDialog mProgressDialog = null;
 
     private DBManager mDBManager;
+
+    PowerManager.WakeLock wakeLock = null;
+
 
     @Nullable
     @Override
@@ -105,13 +110,14 @@ public class DialTestService extends Service{
             }
         }, 0, period);
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override
     public void onCreate() {
 
         Log.d(TAG, "onCreate ...");
+        acquireWakeLock();
         super.onCreate();
     }
 
@@ -124,6 +130,7 @@ public class DialTestService extends Service{
             timer.cancel();
         }
 
+        releaseWakeLock();
         super.onDestroy();
     }
 
@@ -174,5 +181,29 @@ public class DialTestService extends Service{
             mProgressDialog = null;
         }
 
+    }
+
+    //获取电源锁，保持该服务在屏幕熄灭时仍然获取CPU时，保持运行
+    private void acquireWakeLock()
+    {
+        if (null == wakeLock)
+        {
+            PowerManager pm = (PowerManager)this.getSystemService(Context.POWER_SERVICE);
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK|PowerManager.ON_AFTER_RELEASE, TAG);
+            if (null != wakeLock)
+            {
+                wakeLock.acquire();
+            }
+        }
+    }
+
+    //释放设备电源锁
+    private void releaseWakeLock()
+    {
+        if (null != wakeLock)
+        {
+            wakeLock.release();
+            wakeLock = null;
+        }
     }
 }

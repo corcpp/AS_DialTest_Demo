@@ -137,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        LogUtil.debug("onCreate...");
         //初始化数据库
         DBManager.initialize(this);
         mDBManager = DBManager.getInstance();
